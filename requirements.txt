@@ -1,0 +1,4 @@
+flask 
+pandas 
+statsmodels
+matplotlib

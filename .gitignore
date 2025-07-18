@@ -9,3 +9,4 @@ env/
 *.log
 *.cache
 *.png
+daily_forecast.csv

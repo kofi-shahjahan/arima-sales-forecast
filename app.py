@@ -91,11 +91,13 @@ def normalize_sales_data(filepath, selected_product):
         return daily_sales, None
 
 def main():
-    print("\n────────────────────────────────────────────")
+    print("\n────────────────────────────────────────────\n")
     filepath = input("Enter path to CSV file: ").strip()
     product = input("Enter product name: ").strip()
-    start_date = input("Enter start date (YYYY-MM-DD): ").strip()
-    end_date = input("Enter end date (YYYY-MM-DD): ").strip()
+    start_date_input = input("Enter start date (DD-MM-YYYY): ").strip()
+    end_date_input = input("Enter end date (DD-MM-YYYY): ").strip()
+    start_date = datetime.strptime(start_date_input, "%d-%m-%Y").strftime("%Y-%m-%d")
+    end_date = datetime.strptime(end_date_input, "%d-%m-%Y").strftime("%Y-%m-%d")
 
     daily_sales, error = normalize_sales_data(filepath, product)
 
@@ -134,21 +136,32 @@ def main():
         # Step 3: Forecast range
         forecast_index = pd.date_range(start=start_date, end=end_date, freq='D')
         forecast = model_fit.predict(start=forecast_index[0], end=forecast_index[-1])
-        total_forecast = forecast.sum()
+        total_forecast = int(forecast.sum())
 
         forecast_mean = forecast.mean()
 
-        print(f"\n📊 Forecast Summary")
-        print(f"────────────────────────────")
-        print(f"🔹 Product: {product}")
-        print(f"🔹 Date Range: {start_date} to {end_date}")
-        print(f"🔹 Forecasted Total Sales: {total_forecast:.2f}\n")
+        print("────────────────────────────")
+        print("📈 Forecast Summary:")
+        print(f"- Product: {product}")
+        print(f"- Date Range: {start_date} to {end_date}")
+        print(f"- Total Forecasted Sales: {total_forecast}\n")
 
-        print(f"🛠 Debug Info")
-        print(f"────────────────────────────")
-        print(f"📅 Training period: {model_data.index.min().date()} to {model_data.index.max().date()}")
-        print(f"📈 Training days: {len(model_data)}")
-        print(f"📆 Forecast days: {len(forecast_index)}\n")
+        print("────────────────────────────\n")
+        show_daily = input("Would you like to generate a CSV with the forecasted sales for each day? (y/n): ").strip().lower()
+        if show_daily == "y":
+            daily_df = pd.DataFrame({
+                "Date": forecast.index.date,
+                "Forecasted Sales": forecast.astype(int).values
+            })
+            output_file = "daily_forecast.csv"
+            daily_df.to_csv(output_file, index=False)
+            print(f"\n📄 Daily forecast saved to: {output_file}\n")
+
+        print("────────────────────────────")
+        print("🐞 Debug Info:")
+        print(f"- Training period: {model_data.index.min().date()} to {model_data.index.max().date()}")
+        print(f"- Training days: {len(model_data)}")
+        print(f"- Forecast days: {len(forecast_index)}\n")
 
         # Plot actual and forecast
         plt.figure(figsize=(10, 5))
@@ -169,7 +182,7 @@ def main():
         plt.tight_layout()
         plt.savefig("forecast_plot.png")
         plt.close()
-        print("✅ Forecast plot saved as: forecast_plot.png")
+        print("🖼️ Forecast plot saved as: forecast_plot.png\n")
 
         # Monthly Sales Graph
         monthly_sales = model_data.resample("MS").sum()
@@ -182,7 +195,7 @@ def main():
         plt.tight_layout()
         plt.savefig("monthly_plot.png")
         plt.close()
-        print("✅ Monthly sales plot saved as: monthly_plot.png")
+        print("📊 Monthly sales plot saved as: monthly_plot.png")
         print("────────────────────────────────────────────\n")
 
 if __name__ == "__main__":
